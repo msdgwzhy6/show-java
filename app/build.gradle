@@ -117,6 +117,4 @@ dependencies {
     compile 'org.slf4j:slf4j-api:1.7.12'
     compile 'uk.com.robust-it:cloning:1.9.2'
     compile files('libs/android-5.1-clst-core.jar')
-    // PROCYON
-    compile files('libs/procyon-decompiler-0.5.30.jar')
 }
