@@ -16,7 +16,6 @@
 package org.jetbrains.java.decompiler.main.decompiler;
 
 import org.jetbrains.java.decompiler.main.extern.IFernflowerLogger;
-import org.jetbrains.java.decompiler.util.InterpreterUtil;
 
 import java.io.PrintStream;
 
@@ -33,7 +32,7 @@ public class PrintStreamLogger extends IFernflowerLogger {
   @Override
   public void writeMessage(String message, Severity severity) {
     if (accepts(severity)) {
-      stream.println(severity.prefix + InterpreterUtil.getIndentString(indent) + message);
+      stream.println(message);
     }
   }
 
