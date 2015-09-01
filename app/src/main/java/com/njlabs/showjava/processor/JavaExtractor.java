@@ -9,10 +9,12 @@ import org.benf.cfr.reader.state.DCCommonState;
 import org.benf.cfr.reader.util.getopt.GetOptParser;
 import org.benf.cfr.reader.util.getopt.Options;
 import org.benf.cfr.reader.util.getopt.OptionsImpl;
+import org.jetbrains.java.decompiler.main.decompiler.ConsoleDecompiler;
 
 import java.io.File;
 
 import jadx.api.JadxDecompiler;
+import jadx.core.utils.exceptions.JadxException;
 
 /**
  * Created by Niranjan on 29-05-2015.
@@ -33,8 +35,8 @@ public class JavaExtractor extends ProcessServiceHelper {
 
         broadcastStatus("jar2java");
 
-        File dexInputFile = new File(sourceOutputDir + "/optimised_classes.dex");
-        File jarInputFile = new File(sourceOutputDir + "/" + packageName + ".jar");
+        final File dexInputFile = new File(sourceOutputDir + "/optimised_classes.dex");
+        final File jarInputFile = new File(sourceOutputDir + "/" + packageName + ".jar");
 
         final File javaOutputDir = new File(javaSourceOutputDir);
 
@@ -42,11 +44,35 @@ public class JavaExtractor extends ProcessServiceHelper {
             javaOutputDir.mkdirs();
         }
 
-        if(processService.decompilerToUse.equals("jadx")){
-            decompileWithJaDX(dexInputFile, javaOutputDir);
-        } else {
-            decompileWithCFR(jarInputFile,javaOutputDir);
-        }
+        ThreadGroup group = new ThreadGroup("Jar 2 Java Group");
+        Thread javaExtractionThread = new Thread(group, new Runnable() {
+            @Override
+            public void run() {
+                boolean javaError = false;
+                try {
+                    switch (processService.decompilerToUse) {
+                        case "jadx":
+                            decompileWithJaDX(dexInputFile, javaOutputDir);
+                            break;
+                        case "procyon":
+                            decompileWithProcyon(jarInputFile);
+                            break;
+                        case "fernflower":
+                            decompilerWithFernFlower(jarInputFile);
+                            break;
+                        default:
+                            decompileWithCFR(jarInputFile, javaOutputDir);
+                    }
+                } catch (Exception | StackOverflowError e){
+                    Ln.e(e);
+                    javaError = true;
+                }
+                startXMLExtractor(!javaError);
+            }
+        }, "Jar to Java Thread", processService.STACK_SIZE);
+        javaExtractionThread.setPriority(Thread.MAX_PRIORITY);
+        javaExtractionThread.setUncaughtExceptionHandler(exceptionHandler);
+        javaExtractionThread.start();
 
     }
 
@@ -64,49 +90,25 @@ public class JavaExtractor extends ProcessServiceHelper {
         final DCCommonState dcCommonState = new DCCommonState(options);
         final String path = options != null ? options.getFileName() : null;
 
-        ThreadGroup group = new ThreadGroup("Jar 2 Java Group");
-        Thread javaExtractionThread = new Thread(group, new Runnable() {
-            @Override
-            public void run() {
-                boolean javaError = false;
-                try {
-                    Main.doJar(dcCommonState, path);
-                } catch (Exception | StackOverflowError e) {
-                    Ln.e(e);
-                    javaError = true;
-                }
-                startXMLExtractor(!javaError);
-            }
-        }, "Jar to Java Thread", processService.STACK_SIZE);
-
-        javaExtractionThread.setPriority(Thread.MAX_PRIORITY);
-        javaExtractionThread.setUncaughtExceptionHandler(exceptionHandler);
-        javaExtractionThread.start();
+        Main.doJar(dcCommonState, path);
     }
 
-    private void decompileWithJaDX(final File dexInputFile, final File javaOutputDir){
+    private void decompileWithProcyon(File jarInputFile) {
+        // TODO ADD PROCYON (make it work)
+        /*String[] args = {"-jar", jarInputFile.toString(), "-o", javaSourceOutputDir};
+        DecompilerDriver.main(args);*/
+    }
 
-        ThreadGroup group = new ThreadGroup("Jar 2 Java Group");
-        Thread javaExtractionThread = new Thread(group, new Runnable() {
-            @Override
-            public void run() {
-                boolean javaError = false;
-                try {
-                    JadxDecompiler jadx = new JadxDecompiler();
-                    jadx.setOutputDir(javaOutputDir);
-                    jadx.loadFile(dexInputFile);
-                    jadx.save();
-                } catch (Exception | StackOverflowError e) {
-                    Ln.e(e);
-                    javaError = true;
-                }
-                startXMLExtractor(!javaError);
-            }
-        }, "Jar to Java Thread", processService.STACK_SIZE);
+    private void decompilerWithFernFlower(File jarInputFile) {
+        String[] args = {jarInputFile.toString(), javaSourceOutputDir};
+        ConsoleDecompiler.main(args);
+    }
 
-        javaExtractionThread.setPriority(Thread.MAX_PRIORITY);
-        javaExtractionThread.setUncaughtExceptionHandler(exceptionHandler);
-        javaExtractionThread.start();
+    private void decompileWithJaDX(final File dexInputFile, final File javaOutputDir) throws JadxException {
+        JadxDecompiler jadx = new JadxDecompiler();
+        jadx.setOutputDir(javaOutputDir);
+        jadx.loadFile(dexInputFile);
+        jadx.save();
     }
 
     private void startXMLExtractor(boolean hasJava) {

@@ -18,10 +18,12 @@
     <string-array name="decompilers">
         <item>CFR 0.102</item>
         <item>JaDX 0.6.1</item>
+        <item>FernFlower</item>
     </string-array>
 
     <string-array name="decompilers_values">
         <item>cfr</item>
         <item>jadx</item>
+        <item>fernflower</item>
     </string-array>
 </resources>

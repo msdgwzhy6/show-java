@@ -5,6 +5,7 @@ import android.support.annotation.NonNull;
 import android.widget.Toast;
 
 import com.njlabs.showjava.utils.ExceptionHandler;
+import com.njlabs.showjava.utils.logging.Ln;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -56,6 +57,7 @@ public class ProcessServiceHelper {
             str = str.replace("\n", "").replace("\r", "");
             if (!str.equals("")) {
                 broadcastStatus("progress_stream", str);
+                Ln.i("DEBUG_INFO" + str);
             }
         }
 

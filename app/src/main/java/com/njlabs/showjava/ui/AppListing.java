@@ -272,13 +272,14 @@ public class AppListing extends BaseActivity {
 
     private void showDecompilerSelection(final ViewHolder holder){
         if(!prefs.getBoolean("hide_decompiler_select", false)){
-            final CharSequence[] items = { "CFR 0.102", "JaDX 0.6.1" };
+
+            final String[] decompilerKeys = getResources().getStringArray(R.array.decompilers_values);
 
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setTitle("Pick a decompiler");
-            builder.setItems(items, new DialogInterface.OnClickListener() {
+            builder.setItems(R.array.decompilers, new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int item) {
-                    openProcessActivity(holder, (item==1?"jadx":"cfr"));
+                    openProcessActivity(holder, decompilerKeys[item]);
                 }
             });
             AlertDialog alert = builder.create();

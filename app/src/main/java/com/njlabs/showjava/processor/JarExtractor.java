@@ -52,7 +52,7 @@ public class JarExtractor extends ProcessServiceHelper {
             public void run() {
                 loadIgnoredLibs();
                 apkToDex();
-                if(processService.decompilerToUse.equals("cfr")){
+                if(!processService.decompilerToUse.equals("jadx")){
                     dexToJar();
                 }
                 startJavaExtractor();
